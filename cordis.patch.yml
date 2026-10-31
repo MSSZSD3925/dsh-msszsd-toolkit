@@ -1,6 +1,6 @@
-# dsh-toolkit —— QQ 远程驾驶 + 界面暂停按钮 + 重启 DSH（含重启后自动续跑）+ 贵时段纪律
+# dsh-toolkit —— QQ 远程驾驶 + 跨会话提问 + 界面暂停按钮 + 重启 DSH（含重启后自动续跑）+ 贵时段纪律
 #
-# 配置是分组的：qq / pause / restart / peak 四段各自对应 lib/<模块>.js 里的 Config。
+# 配置是分组的：qq / session_ask / pause / restart / peak 各自对应 lib/<模块>.js 里的 Config。
 # 键必须与 schema 完全一致：多一个键严格校验就让插件加载失败，而失败只写在启动
 # DSH 的终端里，现象是「装好了但一点反应都没有」。改 schema 时同步改这里。
 - insert:
@@ -32,6 +32,16 @@
           questions_remote: true
           question_timeout_secs: 1800
           progress_secs: 0
+        session_ask:
+          enabled: true
+          timeout_secs: 120
+          approval_mode: first
+          list_limit: 40
+          grants_path: ''
+          log_path: ''
+          context_guard: true
+          context_confirm_ratio: 0.5
+          compress_threshold_ratio: 0.75
         restart:
           enabled: true
           task_name: 'DSH Restart Now'

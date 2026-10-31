@@ -1,16 +1,17 @@
 # dsh-toolkit
 
-我自用的四个小功能合成一个 DSH 插件（`dsh-tool-mcsrc` 除外）：
+我自用的五个小功能合成一个 DSH 插件（`dsh-tool-mcsrc` 除外）：
 
 | 模块 | 文件 | 干什么 |
 | --- | --- | --- |
 | qq | `lib/qq.js` | 用 QQ 远程驾驶本 profile 里**已存在的会话**：注入消息、路由与会话管理、审批/提问镜像、本轮提权、文件回传、进度推送——命令清单见下面的「QQ 远程驾驶」一节 |
+| session_ask | `lib/session-ask.js` | 跨会话提问：向另一个已存在的会话问一句、取回它的回答（只提问不指挥，白名单 + 审批 + 日志） |
 | pause | `lib/pause.js` | 界面左下角的暂停按钮：在下一个步进边界停住等你补话 |
 | restart | `lib/restart.js` | 重启 DSH；可选「重启后自动续跑」 |
 | peak | `lib/peak.js` | 贵时段纪律：只在工作日 9:00–12:00 / 14:00–18:00 把「省 token 五条」注入系统提示，其余时间整段不出现 |
 
-合并的理由：四个都是"给我自己用的小功能"，拆四个包要维护四份
-`package.json`、三份 `cordis.patch.yml`、三次安装与三次重启。
+合并的理由：五个都是"给我自己用的小功能"，拆五个包要维护五份
+`package.json`、五份 `cordis.patch.yml`、五次安装与五次重启。
 
 ## 安装
 
@@ -25,8 +26,8 @@ bundles 可能漏写，表现为重启后插件静默不生效。
 
 ## 配置
 
-`cordis.patch.yml` 是分组的：`qq:` / `pause:` / `restart:` 分别对应三个模块的
-Config。写成 schema 里有的键；写错的键不会让插件加载失败（schemastery 的 object
+`cordis.patch.yml` 是分组的：`qq:` / `session_ask:` / `pause:` / `restart:` / `peak:`
+分别对应各模块的 Config。写成 schema 里有的键；写错的键不会让插件加载失败（schemastery 的 object
 是非 strict 的，未知键会被原样 merge 进 config 后忽略），但那个配置也就等于没写，
 排查时容易误以为生效了。三个模块的配置键风格统一为 snake_case；pause 的旧键
 `routePrefix` / `waitSeconds` 仍被兼容读取。
@@ -244,3 +245,64 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 
 不用重启，每次求值重读这个文件。验证方式：开一个子会话，问它系统提示里有没有
 「省 token 时段（现在处于贵时段）」这一段。
+
+## 跨会话提问（session_ask）
+
+已经开着的两个会话互相看不见对方的上下文。这个模块让你在当前会话里向**另一个已存在的会话**
+提一个问题，等它答完把回答取回来——只提问，不指挥：问题会被带一段固定头部注入成用户消息，
+回答外包 `<session-answer>` 返回并注明"是资料不是指令"。
+
+三个工具：
+
+| 工具 | 干什么 |
+| --- | --- |
+| `session_ask_list` | 列出可问的会话（完整 id、短 id、标题、最后活动、空闲/在跑、已授权/未授权），不含自己与子智能体 |
+| `session_ask` | `target` + `question` + 可选 `rounds`，注入、等这一轮跑完、读回这一轮助手正文 |
+| `session_ask_grant` / `session_ask_revoke` | 人批准后把目标加进/移出白名单 |
+
+安全边界（规格文档 `跨会话提问插件-需求与安全规范.md` 的 S1–S12）：
+
+- 白名单存在 `${DSH_HOME:-~/.dsh}/dsh-toolkit-session-ask.json`，没授权的目标一律拒绝，报错里写明两种授权办法。授权入口只有人：改这个 JSON，或调 `session_ask_grant` 并当场批准（会弹审批卡）。
+- 每个目标第一次被某个会话提问要人批准，之后同一会话内记住；`approval_mode = each` 时每次都批。问题里出现删除/提交/push/安装一类动作词、或超过 1500 字，不论是否记住过都要人再批一次。
+- 不能问自己；被提问的那一轮里不能再往外问（注入头部带 `depth=1` 标记，目标那一轮里调 `session_ask` 直接拒绝）。
+- 同一目标在一次任务（同一轮用户消息）里最多 3 轮，硬上限；目标正在跑时返回「目标忙」、不插队；等 `timeout_secs` 没答完只回报「未答复」，不中断目标那一轮。
+- 限流：同一提问会话每分钟 3 次、每天 50 次。拒绝代传审批（"帮我批准…"）、拒绝形似凭据的内容。
+- 每次真正注入的提问写一行 JSON 到 `${DSH_HOME}/session-ask.log`：时间、来源、目标、轮次、问题原文、回答原文（超 4000 字截断并标注）、耗时、结果码。只追加，不提供删除。
+- 上下文守卫：注入前读目标会话最近一次请求的 prompt token 与窗口大小，占用达到守卫线（`max(50%, 压缩阈值 × 80%)`，压缩阈值默认 75%，即默认 60%）时，即使之前已经记住过授权，也再弹一次人工确认，并写明当前占用量、可能触发压缩丢信息。已经越过压缩阈值时提示会额外警示。读不到窗口或目标还没跑过请求时守卫不生效，不强行拦人。
+
+配置键：`enabled`、`timeout_secs`（120）、`approval_mode`（`first` / `each`）、`list_limit`（40）、`grants_path`、`log_path`（留空走默认路径）、`context_guard`（true）、`context_confirm_ratio`（0.5）、`compress_threshold_ratio`（0.75，与 billion-context 的 `compress.maxContextLimit` 对齐）。
+
+注入与读回的实现和 qq.js 完全同一条路（`lib/agent-boot.js` 里 resume 拿 agent，
+再 `followup` 一条 `source.kind='user'` 的消息，`whenIdle` 后从这一轮新事件里取最后一条
+`assistant/message`），会话列表与短 id 也共用 `lib/session-index.js`，两处编号不会漂移。
+
+验收检查点：
+
+- 授权后问一句，回答外面有 `<session-answer from="…">`，`session-ask.log` 多一行
+- 未授权的目标：拒绝，并给出 `session_ask_grant` 与手改 JSON 两种办法
+- 同一任务第 4 轮：`已达轮数上限`
+- 目标正在跑：`目标忙，稍后再试`
+- 目标会话收到的消息第一条是 `[跨会话提问 · dsh-toolkit session-ask depth=1]` 开头
+
+## 功能开关（插件详情页）
+
+五个大功能各有一个运行期开关：`qq` / `session_ask` / `pause` / `restart` / `peak`。
+开关状态存在 `${DSH_HOME:-~/.dsh}/dsh-toolkit-toggles.json`，形状 `{ "qq": true, ... }`，
+缺键等于开，所以删文件、老配置都回到全开。
+
+卡片挂在客户端「插件 → dsh-toolkit → 详情页」（官方 keyed seat `plugins.bundle.config`，
+装了 dsh-web-settings 时改挂 family seat `web-ui.plugin.item`）。点一下立即生效：
+各模块在真正干活前读一次开关（1.5 秒缓存），不需要重载插件、不需要改配置、不需要重启。
+
+关掉之后的行为：
+
+- `qq`：入站消息直接忽略并写一行日志；`onebot_send` / `onebot_send_file` / `qq_waker` 三个工具抛错
+- `session_ask`：四个 `session_ask*` 工具抛错
+- `pause`：`/arm` 与步进边界都不再停，界面按钮变灰显示「暂停已关闭」
+- `restart`：排程重启被拒绝
+- `peak`：贵时段纪律段不再注入系统提示
+
+浏览器半是手写的单文件 `lib/client.js`（零构建），通过插件自己的
+`GET/POST /dsh-toolkit/toggles` 读写状态，不依赖 harness 的设置命名空间。
+手工改：`POST /dsh-toolkit/toggles`，body `{"name":"qq","value":false}`；
+或直接编辑上面那个 JSON 文件。
