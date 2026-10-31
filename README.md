@@ -15,14 +15,23 @@
 
 ## 安装
 
+在 DSH 桌面端**插件 → 插件市场**里搜 `dsh-toolkit` 安装，或者：
+
+    dsh plugin --profile desktop add dsh-toolkit      # 从 npm
+    dsh plugin --profile desktop add github:MSSZSD3925/dsh-toolkit   # 从仓库源码
+    powershell -ExecutionPolicy Bypass -File .\install-restart.ps1   # 只有要用「重启 DSH」时才需要
+
+本机开发时可以直接 link 仓库：
+
     dsh plugin --profile desktop add link:C:/Users/<you>/Documents/deepseek-harness/default-workspace/_tools/dsh-toolkit
-    powershell -ExecutionPolicy Bypass -File .\install-restart.ps1
 
 装完**必须**核对 `C:\Users\<you>\.dsh\profiles\desktop\package.json` 的
 `dsh.profile.bundles` 里有 `dsh-toolkit`：CLI 被 pnpm 的构建脚本拦下时会中止，
 bundles 可能漏写，表现为重启后插件静默不生效。
 
 改了 `lib/` 之后要重启 DSH 才生效——可以直接用 `dsh_restart` 工具。
+
+装好之后，插件详情页里会出现「功能开关」卡片，五个模块各一个开关。
 
 ## 配置
 
@@ -37,8 +46,9 @@ bundles 可能漏写，表现为重启后插件静默不生效。
 
 ### 本机真值放本地覆盖文件
 
-仓库是公开的，`cordis.patch.yml` 里只有占位符（`123456789`、`<NapCat 安装目录>`…）。
-真值写在 `${DSH_HOME:-~/.dsh}/dsh-toolkit.local.json`，插件启动时深合并覆盖模板：
+仓库是公开的，`cordis.patch.yml` 里的默认值保持中性：`qq.allow_users` 是空列表（谁都进不来）、
+`qq.napcat_path` 与 `qq.dsh_exe` 是空串、`restart.*_path` 不写（走 `$DSH_HOME` 下的默认路径）。
+个人的 QQ 号与机器路径写在 `${DSH_HOME:-~/.dsh}/dsh-toolkit.local.json`，插件启动时深合并覆盖模板：
 
 ```json
 {

@@ -11,7 +11,7 @@
           enabled: true
           ws_url: 'ws://127.0.0.1:3001'
           access_token: ''
-          allow_users: [123456789]
+          allow_users: []
           prefix: '#'
           default_session: ''
           aliases: []
@@ -20,9 +20,9 @@
           reply_chunk_size: 4000
           silence_notice: true
           hint: ''
-          napcat_path: '<NapCat 安装目录>\NapCatQQ-Desktop.exe'
+          napcat_path: ''
           start_wait_secs: 90
-          dsh_exe: '<DSH 安装目录>\DeepSeek Harness.exe'
+          dsh_exe: ''
           pair_link_autosend: false
           pair_link_address: ''
           link_proxy_port: 62566
@@ -47,9 +47,6 @@
           task_name: 'DSH Restart Now'
           default_delay_secs: 20
           min_delay_secs: 5
-          log_path: 'C:\Users\<you>\.dsh\dsh-restart.log'
-          request_path: 'C:\Users\<you>\.dsh\dsh-restart-request.json'
-          resume_path: 'C:\Users\<you>\.dsh\dsh-toolkit-resume.json'
           resume_max: 2
           resume_ttl_secs: 900
         peak:
