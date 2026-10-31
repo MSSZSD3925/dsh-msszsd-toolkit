@@ -1,6 +1,6 @@
 {
   "name": "dsh-toolkit",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "DSH 小功能合集：QQ 远程驾驶、跨会话提问、界面暂停按钮、重启与重启后自动续跑、贵时段纪律按时间注入",
   "license": "MIT",
   "keywords": [
@@ -54,8 +54,21 @@
     "@deepseek-ai/schemastery": "*",
     "@deepseek-ai/dsh-tools": "*",
     "@deepseek-ai/dsh-llm": "*",
-    "@deepseek-ai/dsh-session": "*",
-    "onebot.js": "*"
+    "@deepseek-ai/dsh-session": "*"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-session": {
+      "optional": true
+    }
   },
   "dependencies": {
     "onebot.js": "0.2.1"
