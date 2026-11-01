@@ -279,8 +279,9 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 - 限流：同一提问会话每分钟 3 次、每天 50 次。拒绝代传审批（"帮我批准…"）、拒绝形似凭据的内容。
 - 每次真正注入的提问写一行 JSON 到 `${DSH_HOME}/session-ask.log`：时间、来源、目标、轮次、问题原文、回答原文（超 4000 字截断并标注）、耗时、结果码。只追加，不提供删除。
 - 上下文守卫：注入前读目标会话最近一次请求的 prompt token 与窗口大小，占用达到守卫线（`max(50%, 压缩阈值 × 80%)`，压缩阈值默认 75%，即默认 60%）时，即使之前已经记住过授权，也再弹一次人工确认，并写明当前占用量、可能触发压缩丢信息。已经越过压缩阈值时提示会额外警示。读不到窗口或目标还没跑过请求时守卫不生效，不强行拦人。
+- 完全权限会话：会话的审批策略是 `never`（「完全权限」/ 默认通过所有权限）时，DSH 会在请求送到回答者之前就按会话策略拒绝，审批卡不会出现。这种会话里 `full_access = allow`（默认）按会话策略当作人已授权、跳过审批直接提问，日志里记 `approval: "policy-never"`，动作词/超长问题的额外确认同样被跳过并在回答尾注说明。想保持严格就把 `full_access` 设成 `deny`，这类会话会直接失败并提示怎么改。
 
-配置键：`enabled`、`timeout_secs`（120）、`approval_mode`（`first` / `each`）、`list_limit`（40）、`grants_path`、`log_path`（留空走默认路径）、`context_guard`（true）、`context_confirm_ratio`（0.5）、`compress_threshold_ratio`（0.75，与 billion-context 的 `compress.maxContextLimit` 对齐）。
+配置键：`enabled`、`timeout_secs`（120）、`approval_mode`（`first` / `each`）、`list_limit`（40）、`grants_path`、`log_path`（留空走默认路径）、`context_guard`（true）、`context_confirm_ratio`（0.5）、`compress_threshold_ratio`（0.75，与 billion-context 的 `compress.maxContextLimit` 对齐）、`full_access`（`allow` / `deny`）。
 
 注入与读回的实现和 qq.js 完全同一条路（`lib/agent-boot.js` 里 resume 拿 agent，
 再 `followup` 一条 `source.kind='user'` 的消息，`whenIdle` 后从这一轮新事件里取最后一条

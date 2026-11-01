@@ -42,6 +42,7 @@
           context_guard: true
           context_confirm_ratio: 0.5
           compress_threshold_ratio: 0.75
+          full_access: allow
         restart:
           enabled: true
           task_name: 'DSH Restart Now'
