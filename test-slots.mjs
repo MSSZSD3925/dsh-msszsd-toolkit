@@ -135,4 +135,17 @@ assert.equal(legacy.grantsOf('team').length, 1, '旧团队槽迁移成令牌')
 assert.equal(legacy.grantsOf('team')[0].peer, '888')
 console.log('ok  旧单槽状态迁移')
 
+// 10) 删除令牌：工作区还在时拒绝，先删工作区再删令牌
+assert.match(slots.deleteToken(''), /tokendel/)
+const t2 = slots.addTeamGrant(repo)
+assert.match(slots.deleteToken(t2.token), /隔离工作区还在/)
+slots.dropTeam(t2.token)
+assert.match(slots.deleteToken(t2.token), /已删除/)
+assert.equal(
+  slots.grantsOf('team').some((g) => g.token === t2.token),
+  false,
+  '令牌已删除',
+)
+console.log('ok  删除令牌')
+
 console.log('SLOT_TESTS_OK')
