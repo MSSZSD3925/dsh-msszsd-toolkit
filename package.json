@@ -1,6 +1,6 @@
 {
-  "name": "dsh-toolkit",
-  "version": "0.4.1",
+  "name": "dsh-msszsd-toolkit",
+  "version": "0.5.0",
   "description": "DSH 小功能合集：QQ 远程驾驶、跨会话提问、界面暂停按钮、重启与重启后自动续跑、贵时段纪律按时间注入",
   "license": "MIT",
   "keywords": [
@@ -14,9 +14,9 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MSSZSD3925/dsh-toolkit.git"
+    "url": "git+https://github.com/MSSZSD3925/dsh-msszsd-toolkit.git"
   },
-  "homepage": "https://github.com/MSSZSD3925/dsh-toolkit#readme",
+  "homepage": "https://github.com/MSSZSD3925/dsh-msszsd-toolkit#readme",
   "type": "module",
   "main": "./lib/index.js",
   "exports": {
@@ -72,5 +72,8 @@
   },
   "dependencies": {
     "onebot.js": "0.2.1"
+  },
+  "bugs": {
+    "url": "https://github.com/MSSZSD3925/dsh-msszsd-toolkit/issues"
   }
 }

@@ -1,4 +1,4 @@
-# dsh-toolkit
+# dsh-msszsd-toolkit
 
 我自用的五个小功能合成一个 DSH 插件（`dsh-tool-mcsrc` 除外）：
 
@@ -15,10 +15,10 @@
 
 ## 安装
 
-在 DSH 桌面端**插件 → 插件市场**里搜 `dsh-toolkit` 安装，或者：
+在 DSH 桌面端**插件 → 插件市场**里搜 `dsh-msszsd-toolkit` 安装，或者：
 
-    dsh plugin --profile desktop add dsh-toolkit      # 从 npm
-    dsh plugin --profile desktop add github:MSSZSD3925/dsh-toolkit   # 从仓库源码
+    dsh plugin --profile desktop add dsh-msszsd-toolkit      # 从 npm
+    dsh plugin --profile desktop add github:MSSZSD3925/dsh-msszsd-toolkit   # 从仓库源码
     powershell -ExecutionPolicy Bypass -File .\install-restart.ps1   # 只有要用「重启 DSH」时才需要
 
 本机开发时可以直接 link 仓库：
@@ -26,7 +26,7 @@
     dsh plugin --profile desktop add link:C:/Users/<you>/Documents/deepseek-harness/default-workspace/_tools/dsh-toolkit
 
 装完**必须**核对 `C:\Users\<you>\.dsh\profiles\desktop\package.json` 的
-`dsh.profile.bundles` 里有 `dsh-toolkit`：CLI 被 pnpm 的构建脚本拦下时会中止，
+`dsh.profile.bundles` 里有 `dsh-msszsd-toolkit`：CLI 被 pnpm 的构建脚本拦下时会中止，
 bundles 可能漏写，表现为重启后插件静默不生效。
 
 改了 `lib/` 之后要重启 DSH 才生效——可以直接用 `dsh_restart` 工具。
@@ -60,7 +60,7 @@ bundles 可能漏写，表现为重启后插件静默不生效。
 ```
 
 只写要覆盖的键，数组与标量直接替换。文件不存在或 JSON 坏了只告警、不影响启动；
-启动日志出现 `[dsh-toolkit] 本地配置已合并：…` 就说明生效了。
+启动日志出现 `[dsh-msszsd-toolkit] 本地配置已合并：…` 就说明生效了。
 
 这样 `git checkout/reset/pull` 冲掉 `cordis.patch.yml` 也不会把 QQ 白名单和路径一起
 冲成占位符——2026-10-30 23:46 的一次 reset 就因此让重启静默失效、QQ 全部失联。
@@ -365,7 +365,7 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 - 未授权的目标：拒绝，并给出 `session_ask_grant` 与手改 JSON 两种办法
 - 同一任务第 4 轮：`已达轮数上限`
 - 目标正在跑：`目标忙，稍后再试`
-- 目标会话收到的消息第一条是 `[跨会话提问 · dsh-toolkit session-ask depth=1]` 开头
+- 目标会话收到的消息第一条是 `[跨会话提问 · dsh-msszsd-toolkit session-ask depth=1]` 开头
 
 ## 功能开关（插件详情页）
 
@@ -384,7 +384,7 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 
 老的平铺形状 `{ "qq": false }` 仍然认（布尔值当 `enabled`）；缺键、缺子功能键都等于开，删文件等于全开。
 
-卡片挂在客户端「插件 → dsh-toolkit → 详情页」（官方 keyed seat `plugins.bundle.config`，
+卡片挂在客户端「插件 → dsh-msszsd-toolkit → 详情页」（官方 keyed seat `plugins.bundle.config`，
 装了 dsh-web-settings 时改挂 family seat `web-ui.plugin.item`）。点一下立即生效：
 各模块在真正干活前读一次开关（1.5 秒缓存 + 文件 mtime 变化立即失效），
 不需要重载插件、不需要改配置、不需要重启。每个模块分组左侧的三角可以收起，收起后只剩模块名与开关，子功能与按钮一起折叠。标了「需确认」的子功能（`qq.share_slot` 与 `qq.team_slot`）
