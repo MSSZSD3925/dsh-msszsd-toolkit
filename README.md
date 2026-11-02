@@ -480,6 +480,12 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 
 先接哪个后端不用现在定：Satori、OneBot 12、QQ 官方机器人都能按这个形状写，一个文件几十行。
 
+### 自测：不连真实账号也能验
+
+`node e2e-onebot.mjs` 会在本地起一个假的 OneBot 11 服务端（真 WebSocket 握手、真帧解析），让默认的 onebot 后端连上去，推一条入站事件进 `client.on('message')`，再发一条 `send_private_msg` 出去，最后验未实现的动作会 reject。不碰 QQ、不需要账号，`npm test` 里已经带上。
+
+顺带钉住两件容易踩的事：入站事件必须带 `sub_type`（私聊 `friend` 或 `group`，群聊 `normal`），onebot.js 是按 `message.private.friend` 这类细分事件分发再逐级冒泡到 `message` 的，缺了 `sub_type` 整条事件会被丢弃，只在日志里留一句 warn；出站是 `{action, params, echo}`，响应用 `echo` 配对，错误信封里 `retcode=-1` 表示连接已关，别的 retcode 是后端自己的业务码（比如动作没实现），这两种失败不能混着判。
+
 ### 和别的机器人插件一起跑
 
 同一台 NapCat 允许被多个 WebSocket 客户端同时连接（多个插件各连一条，事件会广播给每个客户端）。所以能和 AstrBot、NoneBot、Koishi 这类框架并存的要点不是连接，而是**别抢同一条消息**：

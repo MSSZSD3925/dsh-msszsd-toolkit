@@ -5,9 +5,15 @@ import { join } from 'node:path'
 const home = join(process.cwd(), '.adapter-test-home')
 mkdirSync(home, { recursive: true })
 process.env.DSH_HOME = home
-const { buildPrompt, validatePluginName, resolveWorkspace, normalizeKind, KINDS, createAdapter } = await import(
-  './lib/adapter.js'
-)
+const { buildPrompt, validatePluginName, resolveWorkspace, normalizeKind, KINDS, createAdapter, isPlaceholderName } =
+  await import('./lib/adapter.js')
+
+// 占位符/口语化名字不能生成提示词
+assert.equal(isPlaceholderName('这是一个测试用的请求'), true)
+assert.equal(isPlaceholderName('placeholder'), true)
+assert.throws(() => buildPrompt('im', '这是一个测试用的请求'), /占位符/)
+assert.throws(() => buildPrompt('dsh', 'xxx'), /占位符/)
+assert.equal(isPlaceholderName('dsh-im'), false)
 
 // 名称校验：空、换行、超长
 assert.throws(() => validatePluginName(''), /先填插件名称/)
@@ -51,7 +57,21 @@ console.log('ok  DSH 类提示词')
 
 // 通讯软件类提示词：走协议层，不该混进 DSH 服务的用法
 const im = buildPrompt('im', 'AstrBot')
-for (const must of ['registerTransport', 'send_private_msg', 'send_group_msg', 'get_msg', 'AstrBot', 'OneBot 11']) {
+for (const must of [
+  'registerTransport',
+  'send_private_msg',
+  'send_group_msg',
+  'get_msg',
+  'AstrBot',
+  'OneBot 11',
+  'sub_type',
+  'get_status',
+  'upload_private_file',
+  'send_poke',
+  'retcode',
+  '分享槽',
+  'e2e-onebot.mjs',
+]) {
   assert.ok(im.includes(must), `通讯软件提示词应包含 ${must}`)
 }
 assert.ok(im.includes('通讯软件插件'), '要标明这是通讯软件插件那一类')
