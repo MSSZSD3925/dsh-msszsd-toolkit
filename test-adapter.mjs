@@ -28,7 +28,19 @@ console.log('ok  类型校验')
 
 // DSH 类提示词：走进程内服务
 const dsh = buildPrompt('dsh', 'dsh-im')
-for (const must of ['dshToolkitQq', 'deliver', 'onInbound', 'status', 'dsh-im']) {
+for (const must of [
+  'dshToolkitQq',
+  'deliver',
+  'onInbound',
+  'status',
+  'dsh-im',
+  "post_type: 'message'",
+  "export const inject = ['dshToolkitQq']",
+  'Number()',
+  '回程只有 QQ 一条路',
+  'dsh.profile.bundles',
+  'stub',
+]) {
   assert.ok(dsh.includes(must), `DSH 提示词应包含 ${must}`)
 }
 assert.ok(dsh.includes('DSH 插件'), '要标明这是 DSH 插件那一类')
