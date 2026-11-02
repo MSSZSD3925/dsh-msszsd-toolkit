@@ -18,6 +18,12 @@
           list_limit: 12
           route_ttl_secs: 1800
           reply_chunk_size: 4000
+          forward_merge: true
+          forward_name: 'DSH'
+          forward_pull_min_chars: 1000
+          inbound_media: true
+          media_dir: ''
+          sticker_dir: ''
           silence_notice: true
           hint: ''
           napcat_path: ''
