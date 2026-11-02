@@ -24,6 +24,7 @@
           inbound_media: true
           media_dir: ''
           sticker_dir: ''
+          bind_token: ''
           silence_notice: true
           hint: ''
           napcat_path: ''

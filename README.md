@@ -98,6 +98,8 @@ profile 的第二块屏幕：消息注入的是「你本人发的普通消息」
 | `#<路由> 内容` / `#内容` | 把内容注入指定会话 / 默认会话 |
 | `#img <路径>` | 把本机图片/动图当表情直接显示（png/jpg/jpeg/gif/webp/bmp，上限 10 MB） |
 | `#sticker [名字或编号]` | 从表情目录挑一个发出去；不带参数列出目录 |
+| `#bind <口令>` | 绑定这个 QQ 号（配了 `bind_token` 时，只有绑定号会被服务） |
+| `#unbind` | 解除绑定，之后谁都不服务，直到重新 `#bind` |
 | 直接发内容（不带 `#`） | 进默认会话；还没设默认会话时只回一条提示，不猜目标 |
 | `#help` | 上面这份用法 |
 
@@ -166,6 +168,24 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
   动图表情。`#sticker` 不带参数时列出前 30 个。
 - 模型侧对应工具 `qq_send_image`（target + path + 可选 caption），上限 10 MB，
   同样经过凭据文件闸门。
+
+### 与其他 QQ 插件共存（绑定号）
+
+同一个 NapCat 的 OneBot ws server 允许**多个客户端同时连**，事件会广播给每个客户端，
+所以真正的冲突不是「连不上」，而是两边都收到同一条消息、各自回一遍。
+
+这里的做法是只服务**一个绑定号**：
+
+- 在配置里写 `bind_token`（`cordis.patch.yml` 占位空串，真实口令放
+  `$DSH_HOME/dsh-toolkit.local.json` 的 `qq.bind_token`），重启后先发 `#bind <口令>`。
+- 绑定成功后只有这个 QQ 号的消息会进 DSH；其他号的消息只写一行日志、静默忽略，
+  可以留给同一个 NapCat 上的其它机器人插件。
+- 群消息本来就不处理（`message_type !== 'private'` 直接 return），所以该号在群里
+  仍然可以交给别的插件。
+- 绑定关系落在 `$DSH_HOME/dsh-qq-router-state.json` 的 `boundQq`，重启保留；
+  换号先让原号发 `#unbind`，再用新号 `#bind <口令>`。
+- `bind_token` 留空时不启用绑定，行为回到「只按 `allow_users` 白名单」。
+- 绑定号本身就是凭证，不必再写进 `allow_users`（写了也不冲突）。
 
 ### 互动工具
 
