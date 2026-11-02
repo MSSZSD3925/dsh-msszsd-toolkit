@@ -48,11 +48,13 @@ const bound = slots.grantForPeer('12345', 'share')
 assert.equal(bound?.token, s1.token, '主号确认应绑到发起对象而不是主号')
 console.log('ok  绑定挑战码 + 主号代确认')
 
-// 3) 同一个对象不能同时占两个令牌
+// 3) 同一个对象可以再绑不同目录的令牌（多 key 并存）
 const r2 = slots.bindByToken(s2.token, '12345', 'member')
-assert.equal(r2.ok, false)
-assert.match(r2.msg, /已经绑/)
-console.log('ok  一个对象一个令牌')
+assert.equal(r2.ok, true, r2.msg)
+assert.equal(slots.confirmBind('392593439', r2.challenge, { owner: true }).ok, true)
+const boundTokens = [...new Set(slots.grantsOf('share').filter((g) => g.peer === '12345').map((g) => g.token))]
+assert.equal(boundTokens.length, 2, '两个不同目录可以同时绑给一个对象')
+console.log('ok  一个对象可以绑多个 key')
 
 // 4) 答问走单轮调用，目录来自该令牌
 const res = await slots.answerShare({ peer: '12345', question: 'hello 是什么？' })
@@ -85,7 +87,7 @@ console.log('ok  监管按令牌封禁与重置')
 assert.match(slots.unbind('share', s1.token), /已作废/)
 assert.equal(slots.grantsOf('share').length, 1, '另一个令牌还在')
 assert.equal(slots.grantsOf('share')[0].token, s2.token)
-assert.equal(slots.grantForPeer('12345', 'share'), undefined)
+assert.equal(slots.grantForPeer('12345', 'share')?.token, s2.token, '解掉一条后另一条仍然有效')
 console.log('ok  解绑只影响该令牌')
 
 // 8) 团队令牌：worktree / 提交 / 列出 / 合并 / 删工作区保留改动
