@@ -369,26 +369,51 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 
 ## 功能开关（插件详情页）
 
-五个大功能各有一个运行期开关：`qq` / `session_ask` / `pause` / `restart` / `peak`。
-开关状态存在 `${DSH_HOME:-~/.dsh}/dsh-toolkit-toggles.json`，形状 `{ "qq": true, ... }`，
-缺键等于开，所以删文件、老配置都回到全开。
+五个大功能各有一个运行期开关，卡片里还能再分到子功能：
+
+- `qq`：`inbound_media`（入站媒体）/ `forward_merge`（长回复合并转发）/ `sticker`（表情与图片）/ `tools`（四个互动工具）/ `slots`（分享槽与团队槽，危险项）
+- `session_ask`：`context_guard`（上下文守卫）
+- `restart`：`auto_resume`（重启后自动续跑）
+- `pause` / `peak`：无子功能
+
+状态存在 `${DSH_HOME:-~/.dsh}/dsh-toolkit-toggles.json`，新形状：
+
+```json
+{ "qq": { "enabled": true, "sub": { "inbound_media": false } } }
+```
+
+老的平铺形状 `{ "qq": false }` 仍然认（布尔值当 `enabled`）；缺键、缺子功能键都等于开，删文件等于全开。
 
 卡片挂在客户端「插件 → dsh-toolkit → 详情页」（官方 keyed seat `plugins.bundle.config`，
 装了 dsh-web-settings 时改挂 family seat `web-ui.plugin.item`）。点一下立即生效：
-各模块在真正干活前读一次开关（1.5 秒缓存），不需要重载插件、不需要改配置、不需要重启。
+各模块在真正干活前读一次开关（1.5 秒缓存 + 文件 mtime 变化立即失效），
+不需要重载插件、不需要改配置、不需要重启。标了「需确认」的子功能（目前是 `qq.slots`）
+点开时先变成「确认 / 取消」两个按钮，误点不会直接把外部入口打开。
 
 关掉之后的行为：
 
 - `qq`：入站消息直接忽略并写一行日志；`onebot_send` / `onebot_send_file` / `qq_waker` 三个工具抛错
-- `session_ask`：四个 `session_ask*` 工具抛错
+- `qq.inbound_media`：媒体不再下载，只留 `[image]` 之类占位提示
+- `qq.forward_merge`：长回复退回逐条发送
+- `qq.sticker`：`#img`、`#sticker` 与 `qq_send_image` 拒绝
+- `qq.tools`：`qq_poke` / `qq_like` / `qq_reply` / `qq_recall` 拒绝
+- `qq.slots`：所有槽命令与槽消息一律拒绝
+- `session_ask`：四个 `session_ask*` 工具抛错；`session_ask.context_guard` 关掉则不再追加守卫确认
 - `pause`：`/arm` 与步进边界都不再停，界面按钮变灰显示「暂停已关闭」
-- `restart`：排程重启被拒绝
+- `restart`：排程重启被拒绝；`restart.auto_resume` 关掉则重启后不自动续跑
 - `peak`：贵时段纪律段不再注入系统提示
 
-浏览器半是手写的单文件 `lib/client.js`（零构建），通过插件自己的
-`GET/POST /dsh-toolkit/toggles` 读写状态，不依赖 harness 的设置命名空间。
-手工改：`POST /dsh-toolkit/toggles`，body `{"name":"qq","value":false}`；
-或直接编辑上面那个 JSON 文件。
+浏览器半是手写的单文件 `lib/client.js`（零构建），通过插件自己的两个端点读写：
+`GET/POST /dsh-toolkit/toggles`（body `{"name":"qq","value":false}` 或 `{"name":"qq","value":false,"sub":"sticker"}`）
+与 `GET/POST /dsh-toolkit/stickers`（body `{"dir":"D:\\表情"}`，空串恢复默认）。
+
+## 表情包目录
+
+优先级：`$DSH_HOME/dsh-toolkit-stickers.json` 里的 `dir` > 插件配置 `qq.sticker_dir` > `$DSH_HOME/dsh-toolkit-stickers`。
+
+- 插件详情页的卡片底部有输入框，填绝对路径保存即可生效，旁边有「恢复默认」。
+- QQ 里主号可以发 `#stickerpath` 看当前目录与图片数，`#stickerpath <路径>` 改，`#stickerpath reset` 恢复默认。
+- 目录按子目录递归三层扫图，`#sticker <名字>` 用相对路径或名字子串匹配。
 
 ## 分享槽 / 团队槽（受限入口）
 
