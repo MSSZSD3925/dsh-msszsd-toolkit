@@ -4,3 +4,4 @@ node_modules/
 *.bak-*
 lib/qq.js.bak*
 .npmrc
+.tmp/

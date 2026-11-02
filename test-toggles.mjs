@@ -49,6 +49,15 @@ console.log('ok  兼容旧平铺形状')
 const qqSubs = MODULE_META.find(function (m) { return m.name === 'qq' }).subs
 assert.equal(qqSubs.find(function (s) { return s.key === 'share_slot' }).danger, true)
 assert.equal(qqSubs.find(function (s) { return s.key === 'team_slot' }).danger, true)
+// 适配提示词两类是各自独立的危险开关
+assert.equal(qqSubs.find(function (s) { return s.key === 'adapter_dsh' }).danger, true)
+assert.equal(qqSubs.find(function (s) { return s.key === 'adapter_im' }).danger, true)
+writeFileSync(
+  join(home, 'dsh-toolkit-toggles.json'),
+  JSON.stringify({ qq: { enabled: true, sub: { adapter_im: false } } }),
+)
+assert.equal(isOn('qq', 'adapter_dsh'), true, '两类适配开关互不影响')
+assert.equal(isOn('qq', 'adapter_im'), false)
 
 // 旧键 qq.slots=false 必须同时关掉两个槽
 writeFileSync(join(home, 'dsh-toolkit-toggles.json'), JSON.stringify({ qq: { enabled: true, sub: { slots: false } } }))
