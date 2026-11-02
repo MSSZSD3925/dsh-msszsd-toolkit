@@ -46,9 +46,17 @@ assert.equal(isOn('pause'), true)
 console.log('ok  兼容旧平铺形状')
 
 // 危险子功能有标记
-const slots = MODULE_META.find(function (m) { return m.name === 'qq' }).subs.find(function (s) { return s.key === 'slots' })
-assert.equal(slots.danger, true)
-console.log('ok  危险子功能带 danger 标记')
+const qqSubs = MODULE_META.find(function (m) { return m.name === 'qq' }).subs
+assert.equal(qqSubs.find(function (s) { return s.key === 'share_slot' }).danger, true)
+assert.equal(qqSubs.find(function (s) { return s.key === 'team_slot' }).danger, true)
+
+// 旧键 qq.slots=false 必须同时关掉两个槽
+writeFileSync(join(home, 'dsh-toolkit-toggles.json'), JSON.stringify({ qq: { enabled: true, sub: { slots: false } } }))
+assert.equal(isOn('qq', 'share_slot'), false)
+assert.equal(isOn('qq', 'team_slot'), false)
+assert.equal(isOn('qq', 'sticker'), true)
+console.log('ok  旧 slots 键拆到两个槽')
+console.log('ok  危险子功能带 danger 标记（分享槽/团队槽各自标记）')
 
 rmSync(home, { recursive: true, force: true })
 console.log('TOGGLES_TESTS_OK')

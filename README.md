@@ -371,7 +371,7 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 
 五个大功能各有一个运行期开关，卡片里还能再分到子功能：
 
-- `qq`：`inbound_media`（入站媒体）/ `forward_merge`（长回复合并转发）/ `sticker`（表情与图片）/ `tools`（四个互动工具）/ `slots`（分享槽与团队槽，危险项）
+- `qq`：`inbound_media`（入站媒体）/ `forward_merge`（长回复合并转发）/ `sticker`（表情与图片）/ `tools`（四个互动工具）/ `share_slot`（分享槽，危险项）/ `team_slot`（团队槽，危险项）
 - `session_ask`：`context_guard`（上下文守卫）
 - `restart`：`auto_resume`（重启后自动续跑）
 - `pause` / `peak`：无子功能
@@ -387,7 +387,7 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 卡片挂在客户端「插件 → dsh-toolkit → 详情页」（官方 keyed seat `plugins.bundle.config`，
 装了 dsh-web-settings 时改挂 family seat `web-ui.plugin.item`）。点一下立即生效：
 各模块在真正干活前读一次开关（1.5 秒缓存 + 文件 mtime 变化立即失效），
-不需要重载插件、不需要改配置、不需要重启。标了「需确认」的子功能（目前是 `qq.slots`）
+不需要重载插件、不需要改配置、不需要重启。每个模块分组左侧的三角可以收起，收起后只剩模块名与开关，子功能与按钮一起折叠。标了「需确认」的子功能（`qq.share_slot` 与 `qq.team_slot`）
 点开时先变成「确认 / 取消」两个按钮，误点不会直接把外部入口打开。
 
 关掉之后的行为：
@@ -397,10 +397,10 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 - `qq.forward_merge`：长回复退回逐条发送
 - `qq.sticker`：`#img`、`#sticker` 与 `qq_send_image` 拒绝
 - `qq.tools`：`qq_poke` / `qq_like` / `qq_reply` / `qq_recall` 拒绝
-- `qq.slots`：所有槽命令与槽消息一律拒绝
+- `qq.share_slot`：分享槽的命令与消息一律拒绝；`qq.team_slot`：团队槽的命令与消息一律拒绝。旧键 `qq.slots` 仍然认，关了等于两个都关
 - `session_ask`：四个 `session_ask*` 工具抛错；`session_ask.context_guard` 关掉则不再追加守卫确认
 - `pause`：`/arm` 与步进边界都不再停，界面按钮变灰显示「暂停已关闭」
-- `restart`：排程重启被拒绝；`restart.auto_resume` 关掉则重启后不自动续跑
+- `restart`：排程重启被拒绝；`restart.auto_resume` 关掉则重启后不自动续跑。卡片里这个分组下还有一个「一键安装重启程序」按钮，跑同目录的 install-restart.ps1 把 `dsh-restart.ps1` 复制到 `$DSH_HOME` 并注册计划任务（装完按钮会记住这次结果，失败会显示脚本输出）
 - `peak`：贵时段纪律段不再注入系统提示
 
 浏览器半是手写的单文件 `lib/client.js`（零构建），通过插件自己的两个端点读写：
