@@ -425,7 +425,7 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 
 ### 分享令牌：只读问答
 
-1. 主号发 `#sharekey <目录>`：目录存在就生成 `share-xxxxxx` 并绑死这个目录。
+1. 主号发 `#sharekey <目录>`（等价 `#keynew share <目录>`）：目录存在就生成 `share-xxxxxx` 并绑死这个目录。
 2. 目标号或群发 `#bind share-xxxxxx`：返回随机确认口令，2 分钟内回 `#confirm <口令>` 才算绑定。群里发起时口令私聊给主号，由主号私聊确认。
 3. 之后目标号私聊直接提问，或群里 `@机器人` / 带前缀提问。
 4. 只读文本文件：单文件 200 KB 内、累计 120 KB 内、最多 40 个；跳过 `.git`、`node_modules`、构建目录与隐藏目录，不跟随符号链接。
@@ -438,16 +438,16 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 
 分享与团队令牌收到的每条消息都过规则层（路径逃逸、凭据形状、超长 base64、覆盖指令、破坏性动词、超长文本）。同一个令牌在 10 分钟窗口内命中 3 次就自动作废该令牌、踢掉绑定、通知主号，计数写进 `$DSH_HOME/dsh-toolkit-guard.json`。
 
-- 主号 `#sharelist`：列出所有令牌（类型、目录/工作区、绑定对象）与监管层的命中计数、拦截状态。
-- 主号 `#sharekick <令牌>`：踢掉该令牌的绑定对象，令牌与目录留着，可以重新绑。
-- 主号 `#shareunbind <令牌|all>`：作废分享令牌（`all` 清全部）。
-- 主号 `#teamunbind <令牌|all>`：解绑团队令牌，只清绑定对象，工作区与临时分支留着审阅。
-- 主号 `#tokendel <令牌|all>`：把令牌本身删掉。团队令牌要先 `#gitdrop <令牌>` 删掉隔离工作区、并且分支上没有未合并改动（或先 `#gitmerge` / `#gitdiscard all`），否则会拒绝并说明原因。
+- 主号 `#keylist`：列出所有令牌（类型、目录/工作区、绑定对象）与监管层的命中计数、拦截状态。
+- 主号 `#keykick <令牌|all>`：踢掉该令牌的绑定对象，令牌与目录留着，可以重新绑。
+- 主号 `#keyunbind <令牌|all>`：解绑（分享令牌直接作废；团队令牌只清对象，工作区留着审阅）。
+- 主号 `#keydel <令牌|all>`：把令牌本身删掉。团队令牌要先 `#gitdrop <令牌>` 删掉隔离工作区、并且分支上没有未合并改动（或先 `#gitmerge` / `#gitdiscard all`），否则会拒绝并说明原因。
 - 主号 `#guardreset`：清掉全部令牌的命中计数与封禁；`#guardreset <令牌>` 只清一个（也认 `share:share-xxxx` 这种带前缀的写法）。
+- 旧名 `#sharelist` / `#sharekick` / `#shareunbind` / `#teamunbind` / `#tokendel` 仍然可用；区别只是 `#keyunbind <令牌|all>` 不用先分辨类型。
 
 ### 团队令牌：隔离工作区里改，主号审阅后合回
 
-1. 主号发 `#teamkey <git 仓库目录>`：检查是 git 仓库后建一个隔离 worktree（`$DSH_HOME/dsh-toolkit-work/<仓库名>-<时间戳>`，分支 `dsh-team-...`），生成 `team-xxxxxx` 并绑死这份工作区。
+1. 主号发 `#teamkey <git 仓库目录>`（等价 `#keynew team <目录>`）：检查是 git 仓库后建一个隔离 worktree（`$DSH_HOME/dsh-toolkit-work/<仓库名>-<时间戳>`，分支 `dsh-team-...`），生成 `team-xxxxxx` 并绑死这份工作区。
 2. 目标号或群发 `#bind team-xxxxxx`：群里发起时确认口令私聊主号。
 3. 目标号私聊、或已绑定的群里直接提改动要求：要求被注入到该工作区里的专用会话，跑完后自动 `git add -A` + commit 到临时分支，改动摘要（stat + 文件列表）用合并转发发给主号。
 4. 主号 `#gitlist [令牌]` 看临时分支上的改动（逐条提交、带编号），`#gitdiff [令牌]` 看未提交的 diff。

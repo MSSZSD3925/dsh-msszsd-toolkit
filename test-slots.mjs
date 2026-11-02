@@ -136,7 +136,7 @@ assert.equal(legacy.grantsOf('team')[0].peer, '888')
 console.log('ok  旧单槽状态迁移')
 
 // 10) 删除令牌：工作区还在时拒绝，先删工作区再删令牌
-assert.match(slots.deleteToken(''), /tokendel/)
+assert.match(slots.deleteToken(''), /keydel/)
 const t2 = slots.addTeamGrant(repo)
 assert.match(slots.deleteToken(t2.token), /隔离工作区还在/)
 slots.dropTeam(t2.token)
@@ -147,5 +147,23 @@ assert.equal(
   '令牌已删除',
 )
 console.log('ok  删除令牌')
+
+// 11) key* 命令：按令牌踢人、按令牌或 all 解绑、未知令牌提示
+const s3 = createSlots({ dshHome: mkdtempSync(join(tmpdir(), 'dsh-slot-keycmd-')), log: () => {}, llm, defaultModel, guard })
+const a = s3.addTeamGrant(repo)
+const b = s3.addTeamGrant(repo)
+assert.match(s3.kick(a.token), /现在没有绑定中的对象/)
+assert.match(s3.kick('nope-zzzz'), /没有找到令牌/)
+const bindA = s3.bindByToken(a.token, '54321', 'member')
+assert.equal(bindA.ok, true)
+assert.equal(s3.confirmBind('54321', bindA.challenge, { owner: true }).ok, true)
+assert.match(s3.kick(a.token), new RegExp(a.token))
+assert.equal(s3.grantsOf('team').find((g) => g.token === b.token).peer, '', '只踢指定令牌，别的令牌不受影响')
+const bindB = s3.bindByToken(b.token, '11111', 'member')
+assert.equal(s3.confirmBind('11111', bindB.challenge, { owner: true }).ok, true)
+assert.match(s3.unbindAny('share-zzzz'), /没有找到令牌/)
+assert.match(s3.unbindAny('all'), /已/)
+assert.equal(s3.slotInfo().grants.filter((g) => g.peer).length, 0, 'all 解绑清掉所有绑定')
+console.log('ok  key* 按令牌操作')
 
 console.log('SLOT_TESTS_OK')
