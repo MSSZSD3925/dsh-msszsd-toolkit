@@ -403,9 +403,31 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 - `restart`：排程重启被拒绝；`restart.auto_resume` 关掉则重启后不自动续跑。卡片里这个分组下还有一个「一键安装重启程序」按钮，跑同目录的 install-restart.ps1 把 `dsh-restart.ps1` 复制到 `$DSH_HOME` 并注册计划任务（装完按钮会记住这次结果，失败会显示脚本输出）
 - `peak`：贵时段纪律段不再注入系统提示
 
-浏览器半是手写的单文件 `lib/client.js`（零构建），通过插件自己的两个端点读写：
+浏览器半是手写的单文件 `lib/client.js`（零构建），通过插件自己的端点读写：
 `GET/POST /dsh-toolkit/toggles`（body `{"name":"qq","value":false}` 或 `{"name":"qq","value":false,"sub":"sticker"}`）
 与 `GET/POST /dsh-toolkit/stickers`（body `{"dir":"D:\\表情"}`，空串恢复默认）。
+
+## 强纪律（按功能设定允许时段）
+
+在插件详情页「功能开关」下面是「强纪律」一节。总开关打开后，下面每条规则只在自己的时段里放行；时段外这些功能一律拒绝，效果和手动关掉一样（QQ 命令回「强纪律：现在不在允许时段…」，工具抛同样的错）。
+
+- 规则结构：`target`（`qq.tools`、`session_ask`、`*` 这种「模块.子功能」写法）＋ `from`-`to`（24 小时制，`22:00 → 06:00` 表示跨夜）＋ `days`（ISO 1–7，空数组表示每天）。
+- 状态文件 `$DSH_HOME/dsh-toolkit-discipline.json`，可以手工改，删掉即全部放行。
+- 一条规则挡一个对象；同一对象命中多条规则时取并集（任意一条允许就放行）。
+- 现有时段目标：整个插件 `*`、`session_ask` 与其 `context_guard`、`qq` 与 `qq.tools`/`inbound_media`/`sticker`/`share_slot`/`team_slot`/`adapter_dsh`/`adapter_im`、`restart`、`pause`、`peak`。
+
+自然语言添加：在输入框写一句，例如
+
+```
+工作日 9:00 到 18:00 才允许跨会话提问
+周末全天禁止团队槽
+每天 22 点到 6 点关掉 QQ 工具
+```
+
+点「解析并添加」（或 Ctrl+Enter）就会解析成一条规则并写进状态文件；解析不到时段会直接告诉你该怎么写。也可以调端点：
+
+- `GET /dsh-toolkit/discipline`：返回 `{enabled, rules, targets, now, weekday, path}`，每条规则带 `allowed`。
+- `POST /dsh-toolkit/discipline`，body 用 `action` 区分：`enable`（`{"value":true}`）、`rule`（完整规则对象）、`parse`（只解析不写入）、`parse-add`（`{"description":"…"}`）、`toggle`（`{"id":"…","value":false}`）、`remove`（`{"id":"…"}`）。
 
 ## 表情包目录
 
