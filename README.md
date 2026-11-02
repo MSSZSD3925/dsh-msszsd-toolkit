@@ -488,6 +488,37 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 - 群聊交给别的机器人：本插件只处理私聊、以及绑定过的分享/团队槽消息；
 - 如果两边都要回同一个群，用不同的触发词（本插件 `#` 前缀 + @）分开。
 
+### 给其他 DSH 插件用的桥（dshToolkitQq）
+
+本插件在 Host 上暴露一个服务 `dshToolkitQq`，别的 DSH 通道插件（官方 QQ 机器人、Telegram、Satori、企业微信……）可以把消息交给它，直接复用这里已有的会话路由、工具、开关与监管，不用自己再写一遍「QQ 消息怎么进 DSH」。
+
+```js
+// 在别的插件的 apply 里
+const qq = ctx.get('dshToolkitQq')
+if (qq) {
+  // 1) 把外部消息送进来：事件用 OneBot 11 的形状（private / group + message 段）
+  await qq.deliver({
+    self_id: 10000,
+    user_id: 123456,          // 外部渠道的会话 id 放这里
+    message_type: 'private',
+    message: [{ type: 'text', data: { text: '在吗' } }],
+    raw_message: '在吗',
+  })
+
+  // 2) 用 QQ 通道回话
+  await qq.send({ peer: 123456, isGroup: false, text: '在的' })
+  await qq.send({ peer: 'group:888', text: '群里也发一条' })
+
+  // 3) 观察所有入站消息（做日志、镜像、统计）
+  const off = qq.onInbound((msg) => console.log(msg.peerKind, msg.peer, msg.text))
+
+  // 4) 查状态
+  qq.status() // { name, connected, bound, transport, prefix, slotsEnabled }
+}
+```
+
+`deliver()` 进来的事件会被打上内部标记，跳过「QQ 绑定口令」这道闸门（外部渠道自己的授权由它负责），但仍然走白名单之外的一切：监管规则、槽的授权、工具闸门、插件详情页开关。`onInbound` 的订阅者出错只会写日志，不会影响消息本身。
+
 ### 配置键
 
 `slots_enabled`（默认 true）：总开关，关掉后所有 `#share*` / `#team*` 命令直接拒绝。
