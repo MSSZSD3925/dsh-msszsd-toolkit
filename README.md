@@ -460,6 +460,34 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 
 `#shareopen <目录>` + `#shareconfirm <确认码>`、`#teamopen <git 目录>` + `#teamconfirm <确认码>` 是同一件事的另一条路：确认后同样会生成令牌，返回给你的那行里就有。
 
+## 接别的机器人后端（transport）
+
+默认只连 OneBot 11 正向 WebSocket（NapCat、Lagrange、LuckyLilliaBot 这类实现都行），换个后端不用改业务代码。
+
+- 只换地址：改 `qq.ws_url`（和 `qq.access_token`）就行，这是最常见的情况。
+- 换协议：在 `lib/transport.js` 里 `registerTransport('<名字>', { connect })` 登记一个适配器，再把 `qq.transport` 改成那个名字。适配器只需要返回一个对象：
+
+  ```js
+  {
+    on('message', (event) => {}),   // OneBot 11 形状的消息事件
+    on('meta_event', (event) => {}),// 可选，用来记 self_id
+    send(action, params) {},        // 至少要支持 send_private_msg、send_group_msg
+    close() {},                     // 可选
+  }
+  ```
+
+  事件至少带 `message_type`、`user_id` / `group_id`、`message`、`raw_message`、`self_id`；动作没有实现的能力直接抛错即可，插件会把错误回给调用方。
+
+先接哪个后端不用现在定：Satori、OneBot 12、QQ 官方机器人都能按这个形状写，一个文件几十行。
+
+### 和别的机器人插件一起跑
+
+同一台 NapCat 允许被多个 WebSocket 客户端同时连接（多个插件各连一条，事件会广播给每个客户端）。所以能和 AstrBot、NoneBot、Koishi 这类框架并存的要点不是连接，而是**别抢同一条消息**：
+
+- 用 `#bind <口令>` 把本插件绑死在自己的号上，其他号的消息静默忽略；
+- 群聊交给别的机器人：本插件只处理私聊、以及绑定过的分享/团队槽消息；
+- 如果两边都要回同一个群，用不同的触发词（本插件 `#` 前缀 + @）分开。
+
 ### 配置键
 
 `slots_enabled`（默认 true）：总开关，关掉后所有 `#share*` / `#team*` 命令直接拒绝。

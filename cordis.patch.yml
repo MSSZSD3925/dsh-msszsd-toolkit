@@ -10,6 +10,7 @@
         qq:
           enabled: true
           ws_url: 'ws://127.0.0.1:3001'
+          transport: 'onebot'
           access_token: ''
           allow_users: []
           prefix: '#'
