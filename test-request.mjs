@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { Readable } from 'node:stream'
 import { createRequests } from './lib/request.js'
 
 const grant = { token: 'share-abc123', kind: 'share', peer: '1127790800', dir: 'C:/tmp/docs' }
@@ -76,6 +77,50 @@ const requests = createRequests({
     assert.match(got.err, c.why, JSON.stringify(c.args))
   }
   console.log('ok  参数错误都被拒并给出原因')
+}
+
+// HTTP 处理器：GET 405、坏 JSON 400、正常 JSON 有结果
+// 这一组是为了防止「请求体回调签名用错、异常在 IncomingMessage 里抛出把宿主带走」再次发生。
+{
+  function fakeReq(method, raw) {
+    const req = Readable.from(raw === undefined ? [] : [Buffer.from(raw)])
+    req.method = method
+    return req
+  }
+  function fakeRes() {
+    return {
+      statusCode: 0,
+      headers: null,
+      body: '',
+      writeHead(code, headers) {
+        this.statusCode = code
+        this.headers = headers
+      },
+      end(body) {
+        this.body = body
+      },
+    }
+  }
+
+  const handler = requests.makeHandler()
+
+  const g = fakeRes()
+  await handler(fakeReq('GET'), g)
+  assert.equal(g.statusCode, 405)
+  assert.match(g.body, /POST/)
+  console.log('ok  GET 返回 405，不挂起')
+
+  const bad = fakeRes()
+  await handler(fakeReq('POST', '{oops'), bad)
+  assert.equal(bad.statusCode, 400)
+  assert.match(bad.body, /JSON/)
+  console.log('ok  坏 JSON 返回 400，异常没外溢')
+
+  const ok = fakeRes()
+  await handler(fakeReq('POST', JSON.stringify({ kind: 'ask', text: '目录里有什么', from: 'group:1127790800' })), ok)
+  assert.equal(ok.statusCode, 200)
+  assert.match(ok.body, /answered/)
+  console.log('ok  正常 POST 返回 200 与结果')
 }
 
 console.log('REQUEST_TESTS_OK')
