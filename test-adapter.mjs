@@ -1,5 +1,11 @@
 import assert from 'node:assert/strict'
-import { buildPrompt, validatePluginName } from './lib/adapter.js'
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+const home = join(process.cwd(), '.adapter-test-home')
+mkdirSync(home, { recursive: true })
+process.env.DSH_HOME = home
+const { buildPrompt, validatePluginName, resolveWorkspace } = await import('./lib/adapter.js')
 
 // 名称校验：空、换行、超长
 assert.throws(() => validatePluginName(''), /先填插件名称/)
@@ -28,3 +34,18 @@ console.log('ok  名称里的换行被压平')
 assert.equal(buildPrompt('x'), buildPrompt('x'))
 console.log('ok  提示词可复现')
 console.log('ADAPTER_TESTS_OK')
+
+// 新会话的工作目录：默认取 DSH 默认工作区，而不是 _no-cwd
+mkdirSync(join(process.env.DSH_HOME, 'storages'), { recursive: true })
+writeFileSync(
+  join(process.env.DSH_HOME, 'storages', 'workspace.json'),
+  JSON.stringify({
+    global: { defaultWorkspaceId: 'ws-1' },
+    tables: { workspaces: { 'ws-1': { path: 'C:\work\demo' } } },
+  }),
+)
+assert.equal(resolveWorkspace(process.env.DSH_HOME), 'C:\work\demo', '读到默认工作区路径')
+writeFileSync(join(process.env.DSH_HOME, 'storages', 'workspace.json'), '{}')
+assert.equal(resolveWorkspace(process.env.DSH_HOME), process.cwd(), '读不到时退回进程 cwd')
+rmSync(home, { recursive: true, force: true })
+console.log('ok  新会话工作目录')
