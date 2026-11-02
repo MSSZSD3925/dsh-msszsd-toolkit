@@ -441,7 +441,7 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 - 主号 `#keylist`：列出所有令牌（类型、目录/工作区、绑定对象）与监管层的命中计数、拦截状态。
 - 主号 `#keykick <令牌|all>`：踢掉该令牌的绑定对象，令牌与目录留着，可以重新绑。
 - 主号 `#keyunbind <令牌|all>`：解绑（分享令牌直接作废；团队令牌只清对象，工作区留着审阅）。
-- 主号 `#keydel <令牌|all>`：把令牌本身删掉。团队令牌要先 `#gitdrop <令牌>` 删掉隔离工作区、并且分支上没有未合并改动（或先 `#gitmerge` / `#gitdiscard all`），否则会拒绝并说明原因。
+- 主号 `#keydel <令牌>` / `#keydel all`：把令牌删掉。`all` 要在 2 分钟内再发一次 `#keydel all confirm`；团队令牌要先 `#gitdrop <令牌>` 删掉隔离工作区、并且分支上没有未合并改动（或先 `#gitmerge` / `#gitdiscard all`），否则会拒绝并说明原因。
 - 主号 `#guardreset`：清掉全部令牌的命中计数与封禁；`#guardreset <令牌>` 只清一个（也认 `share:share-xxxx` 这种带前缀的写法）。
 - 旧名 `#sharelist` / `#sharekick` / `#shareunbind` / `#teamunbind` / `#tokendel` 仍然可用；区别只是 `#keyunbind <令牌|all>` 不用先分辨类型。
 
