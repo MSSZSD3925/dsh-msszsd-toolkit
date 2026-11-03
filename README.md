@@ -367,11 +367,35 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 - 目标正在跑：`目标忙，稍后再试`
 - 目标会话收到的消息第一条是 `[跨会话提问 · dsh-msszsd-toolkit session-ask depth=1]` 开头
 
+## 群接待（每个群一个长期会话）
+
+给一个群开接待之后，群里被 @ 或带 `#` 的消息会进这个群自己的长期会话，由会话里的 AI 决定做什么：
+
+- 要介绍设计、回答「这个模组是什么」→ 自己调 `share_read` 读授权目录，用自己的话讲；
+- 觉得某条要求确实要改文件 → 自己调 `team_edit`，交给本机另一个会话在隔离工作区里改；
+- 想说话就调 `onebot_send`，`target` 写 `group:<群号>`；觉得这条不用接，就什么工具都不调。
+
+插件这边不再替它写固定台词，也不会对每句话都回「收到，正在处理」；成功、失败、提交结果都只作为工具返回值给 AI，由它自己组织成话。会话按群持久化，重启后接着用同一个会话，记忆和上下文都在。
+
+开启与查看（只有主号能用）：
+
+```
+#hoston <群号>      开启某个群的接待（在那个群里发可以省掉群号）
+#hostoff <群号>     关闭接待，会话保留
+#hostlist           看开了哪些群、各自用哪个会话
+#hostpersona        看人设文件路径与内容
+#hostpersona reset  恢复默认人设
+```
+
+前置条件：插件详情页 → QQ → `群接待（长期会话）`（默认关）要先打开。
+
+状态文件 `${DSH_HOME}/dsh-toolkit-host.json`（`{ "groups": { "<群号>": { "sessionId": "…", "since": …, "personaSent": true } } }`）；人设文件 `${DSH_HOME}/dsh-toolkit-host-persona.md`，第一次用到时按内置默认写出来，改完保存即生效，不用重启。
+
 ## 功能开关（插件详情页）
 
 五个大功能各有一个运行期开关，卡片里还能再分到子功能：
 
-- `qq`：`inbound_media`（入站媒体）/ `forward_merge`（长回复合并转发）/ `sticker`（表情与图片）/ `tools`（四个互动工具）/ `share_slot`（分享槽，危险项）/ `team_slot`（团队槽，危险项）
+- `qq`：`inbound_media`（入站媒体）/ `forward_merge`（长回复合并转发）/ `sticker`（表情与图片）/ `tools`（四个互动工具）/ `group_host`（群接待，危险项）/ `share_slot`（分享槽，危险项）/ `team_slot`（团队槽，危险项）/ `slot_tools`（槽能力作为工具，危险项）
 - `session_ask`：`context_guard`（上下文守卫）
 - `restart`：`auto_resume`（重启后自动续跑）
 - `pause` / `peak`：无子功能

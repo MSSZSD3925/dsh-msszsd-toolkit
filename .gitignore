@@ -6,3 +6,5 @@ lib/qq.js.bak*
 .npmrc
 .tmp/
 adapters/
+.test-tmp/
+.host-test-*/
