@@ -579,7 +579,7 @@ if (qq) {
 
 - 插件详情页 → QQ 分组里的 `槽能力作为工具`（默认关）。打开后，被 QQ 驱动的聊天 AI 可以自己调用两个工具，不必等 `#read` / `#edit` 前缀：
   - `share_read({ question, peer? })`：走分享槽读目录答题；`peer` 缺省取最近一条入站消息的来源。
-  - `team_edit({ instruction, peer? })`：在团队槽的隔离工作区里改文件——实际改动交给 WorkBuddy 的 deepseek 模型执行（配置 `qq.workbuddy_script` 指向 `workbuddy.sh`，模型默认 `deepseek-v4.1-flash`），完成后插件自己 `git add -A` 并提交到临时分支，返回 diff。不会自动合并，合并仍由主号 `#gitmerge`。
+  - `team_edit({ instruction, peer? })`：在团队槽的隔离工作区里改文件——插件把要求交给本机一个独立会话执行，完成后 `git add -A` 提交到临时分支并返回 diff。不会自动合并，合并仍由主号 `#gitmerge`。
 - 关掉后这两个工具调用直接报错，入口回到 `#read` / `#edit` 前缀。
 
 ### 结构化请求入口（给上级 bot 用）

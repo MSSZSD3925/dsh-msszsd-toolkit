@@ -27,10 +27,6 @@
           sticker_dir: ''
           bind_token: ''
           slots_enabled: true
-
-          workbuddy_script: ''
-          workbuddy_model: deepseek-v4.1-flash
-          workbuddy_timeout_ms: 600000
           silence_notice: true
           hint: ''
           napcat_path: ''
