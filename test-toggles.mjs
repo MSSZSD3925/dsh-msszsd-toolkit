@@ -11,7 +11,11 @@ const { readToggles, isOn, setToggle, MODULE_META } = await import('./lib/toggle
 // 缺文件 = 全开、子功能全开
 assert.equal(isOn('qq'), true)
 assert.equal(isOn('qq', 'sticker'), true)
-assert.equal(MODULE_META.length, 5)
+const moduleIds = MODULE_META.map((m) => m.name)
+assert.equal(moduleIds.length, 6)
+for (const id of ['qq', 'session_ask', 'pause', 'restart', 'peak']) {
+  assert.ok(moduleIds.includes(id), `缺少模块 ${id}`)
+}
 console.log('ok  缺文件默认全开')
 
 // 关一个子功能，不影响模块与其他子功能
