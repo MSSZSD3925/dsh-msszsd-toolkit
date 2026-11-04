@@ -392,7 +392,7 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 权限按「谁触发」分两级：
 
 - 主号自己（`#bind` 绑定的那个号）在这个群里发消息 → 这一轮不设限，命令行、读写文件都能用，跟普通会话一样；
-- 群友触发 → 只放行 `onebot_send` / `qq_reply` / 知识检索 / 互动工具；`share_read` 需要该群绑了读授权，`team_edit` 还要打开 `群接待可改文件`。其余工具一律被工具闸门拒掉并记日志。
+- 群友触发 → 只放行 `onebot_send` / `qq_reply` / 知识检索 / 互动工具；`share_read` 需要该群绑了读授权；`team_edit` 与直接写文件由 `群接待可改文件` 的三态决定（见下）。其余工具一律被工具闸门拒掉并记日志。
 
 回话节流：同一群两条回复至少隔 6 秒、同一句话 10 分钟内不重发、一分钟最多 6 条；撞上间隔或上限时排队等一下再发（最多 20 秒），只有「这句话刚说过」才直接拒绝。
 
@@ -404,7 +404,12 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 
 五个大功能各有一个运行期开关，卡片里还能再分到子功能：
 
-- `qq`：`inbound_media`（入站媒体）/ `forward_merge`（长回复合并转发）/ `sticker`（表情与图片）/ `tools`（四个互动工具）/ `group_host`（群接待，危险项）/ `share_slot`（分享槽，危险项）/ `team_slot`（团队槽，危险项）/ `slot_tools`（槽能力作为工具，危险项）
+- `qq`：子功能太多，按用途收进五个可折叠小节——
+  - 消息：`inbound_media`（入站媒体）/ `forward_merge`（长回复合并转发）/ `sticker`（表情与图片）
+  - 工具：`tools`（四个互动工具）
+  - 令牌与槽：`share_slot`（分享槽，危险项）/ `team_slot`（团队槽，危险项）/ `dual_key`（双权限令牌，危险项）/ `share_ai_only` / `team_ai_only` / `slot_tools`（槽能力作为工具，危险项）
+  - 群接待：`group_host`（群接待，危险项）/ `group_host_write`（群接待可改文件，三态：禁止 / 提交 / 直写，默认提交）
+  - 插件适配：`adapter_dsh` / `adapter_im`（各是危险项）
 - `session_ask`：`context_guard`（上下文守卫）
 - `restart`：`auto_resume`（重启后自动续跑）
 - `pause` / `peak`：无子功能
@@ -420,8 +425,8 @@ agent 从 running 回到 idle 时自动撤销并推一条「提权结束」，�
 卡片挂在客户端「插件 → dsh-msszsd-toolkit → 详情页」（官方 keyed seat `plugins.bundle.config`，
 装了 dsh-web-settings 时改挂 family seat `web-ui.plugin.item`）。点一下立即生效：
 各模块在真正干活前读一次开关（1.5 秒缓存 + 文件 mtime 变化立即失效），
-不需要重载插件、不需要改配置、不需要重启。每个模块分组左侧的三角可以收起，收起后只剩模块名与开关，子功能与按钮一起折叠。标了「需确认」的子功能（`qq.share_slot` 与 `qq.team_slot`）
-点开时先变成「确认 / 取消」两个按钮，误点不会直接把外部入口打开。
+不需要重载插件、不需要改配置、不需要重启。每个模块分组左侧的三角可以收起，收起后只剩模块名与开关，子功能与按钮一起折叠。标了「需确认」的子功能（`qq.share_slot`、`qq.team_slot`、`qq.group_host` 等）
+点开时先变成「确认 / 取消」两个按钮，误点不会直接把外部入口打开；三态项选「直写」时同理，先要点一次「确认直写」。QQ 模块下面的五个小节默认收起（群接待那一节默认展开），标题右侧显示「本组开着的项数 / 总项数」。
 
 关掉之后的行为：
 
