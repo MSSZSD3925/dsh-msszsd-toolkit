@@ -27,6 +27,8 @@
           sticker_dir: ''
           bind_token: ''
           slots_enabled: true
+          bill_script: ''
+          bill_auto: true
           silence_notice: true
           hint: ''
           napcat_path: ''
