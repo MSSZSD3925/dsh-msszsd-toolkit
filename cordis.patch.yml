@@ -64,3 +64,12 @@
           utc_offset_hours: 8
           morning: '9-12'
           afternoon: '14-18'
+        session_watch:
+          enabled: true
+          dir: ''
+          scan_on_start: true
+          interval_secs: 900
+          max_age_days: 14
+          tail_bytes: 4194304
+          max_rows: 8
+          open_command: ''
