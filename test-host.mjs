@@ -51,6 +51,27 @@ try {
 
   const state = JSON.parse(readFileSync(join(dir, 'dsh-toolkit-host.json'), 'utf8'))
   ok(typeof state.groups === 'object', '状态文件结构正确')
+
+  // 会话归属：给工具闸门用
+  const host3 = createHost({ dshHome: dir, log: () => {} })
+  host3.enable('777')
+  host3.setSession('777', 'session-XYZ')
+  ok(host3.groupOfSession('session-XYZ') === '777', '按会话反查群号')
+  ok(host3.groupOfSession('session-other') === '', '不认识的会话返回空')
+
+  // 回复节流：越界就拦
+  const t0 = 1_700_000_000_000
+  ok(host3.allowReply('777', '第一句', t0).ok === true, '第一条放行')
+  ok(host3.allowReply('777', '第二句', t0 + 100).ok === false, '间隔不足时拦下')
+  ok(host3.allowReply('777', '第一句', t0 + 7000).ok === false, '重复文本 10 分钟内拦下')
+  ok(host3.allowReply('777', '第二句', t0 + 7000).ok === true, '换一句、间隔够了就放行')
+  let burstOk = 0
+  for (let i = 0; i < 6; i += 1) {
+    if (host3.allowReply('999', `连发${i}`, t0 + i * 7000).ok) burstOk += 1
+  }
+  ok(burstOk === 6, '一分钟内 6 条都能发')
+  ok(host3.allowReply('999', '第七条', t0 + 42000).ok === false, '一分钟内第 7 条拦下')
+  ok(host3.allowReply('888', '别的群不受影响', t0 + 100).ok === true, '不同群互不影响')
 } finally {
   rmSync(dir, { recursive: true, force: true })
 }
