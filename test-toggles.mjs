@@ -92,7 +92,7 @@ console.log('ok  三态项：禁止 / 提交 / 直写')
 
 // 二级分组：qq 声明了分组，每个子功能都归属其中一组
 const groupIds = qqMod.groups.map(function (g) { return g.id })
-assert.deepEqual(groupIds, ['messages', 'tools', 'slots', 'host', 'adapters'])
+assert.deepEqual(groupIds, ['messages', 'conn', 'tools', 'slots', 'host', 'adapters'])
 for (const sub of qqMod.subs) assert.ok(groupIds.includes(sub.group), sub.key + ' 缺少分组')
 console.log('ok  QQ 子功能都归到二级分组')
 console.log('ok  危险子功能带 danger 标记（分享槽/团队槽各自标记）')

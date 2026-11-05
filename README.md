@@ -421,6 +421,8 @@ QQ 驱动的回合结束后，插件自己跑一次账单脚本，把脚本的�
 
 - `qq`：子功能太多，按用途收进五个可折叠小节——
   - 消息：`inbound_media`（入站媒体）/ `forward_merge`（长回复合并转发）/ `sticker`（表情与图片）
+  - 连接：`napcat_autostart`（NapCat 掉线自动拉起，默认关）——关着时看门狗只重连 WS，
+    不会把 NapCat 桌面端拉起来弹到前台；开着时也会先查同名进程在不在，避免启动第二个实例互踢
   - 工具：`tools`（四个互动工具）
   - 令牌与槽：`share_slot`（分享槽，危险项）/ `team_slot`（团队槽，危险项）/ `dual_key`（双权限令牌，危险项）/ `share_ai_only` / `team_ai_only` / `slot_tools`（槽能力作为工具，危险项）
   - 群接待：`group_host`（群接待，危险项）/ `group_host_write`（群接待可改文件，三态：禁止 / 提交 / 直写，默认提交）
